@@ -1,9 +1,9 @@
-# Adafruit's Neotrellis-M4-Feather-Express-8x8
-https://www.adafruit.com/product/1929
+# Adafruit's 8x8 NeoTrellis Feather M4 Kit
+https://github.com/adafruit | https://www.adafruit.com/product/1929
 
-Seems very few sketches &amp; examples exist for the updated Adafruit Neotrellis M4 Feather Express 8x8 UNTZstrument refresh, so here are ones I've cobbled together thus far... none of these are perfect, all need improvement, but give a vague starting point.
+Seems very few sketches &amp; examples have been updated for the Adafruit Neotrellis M4 Feather Express 8x8 Kit, so here are ones I've cobbled together thus far... none of these are perfect, all need improvement, but give a vague starting point.
 
-Don't hammer any of these with MIDI In data... the Feather will lag and buffer. Can tell this is happening by ceasing MIDI input and watching things continue to react. Typically sending much beyond 480bpm pulse to MIDI In is enough to cause things to lag (eg: sixteenths at 120bpm). 
+Don't hammer any of these with too much MIDI In data... the Feather will lag and buffer. Can tell this is happening by ceasing MIDI input and watching things continue to react. Typically sending much beyond 480bpm NoteOn pulse to MIDI In on Ch16 is enough to cause things to lag (eg: sixteenths at 120bpm). 
 
 The whole timing side of things needs work - these are all very hacky basic sketches.
 
