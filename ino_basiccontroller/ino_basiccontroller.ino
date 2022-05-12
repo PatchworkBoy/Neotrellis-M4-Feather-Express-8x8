@@ -179,17 +179,21 @@ void loop() {
           reset();
           break;
         default:
-          if (type1 == 0x08 && type2 == 0x80) {
-            trellis.setPixelColor(key, maincolor);
-            state[key]=0x0;
-          }
-          if (type1 == 0x09 && type2 == 0x90) {
-            if (rx.byte3) {
-              trellis.setPixelColor(key, Wheel(key*3.9));
-              state[key]=Wheel(key);
-            } else {
+          if(key>0 & key<63){
+            if (type1 == 0x08 && type2 == 0x80) {
               trellis.setPixelColor(key, maincolor);
-              state[key]=maincolor;
+              state[key]=0x0;
+            }
+            if (type1 == 0x09 && type2 == 0x90) {
+              if (rx.byte3) {
+                
+                  trellis.setPixelColor(key, Wheel(key*3.9));
+                  state[key]=Wheel(key);
+                
+              } else {
+                trellis.setPixelColor(key, maincolor);
+                state[key]=maincolor;
+              }
             }
           }
           break;
