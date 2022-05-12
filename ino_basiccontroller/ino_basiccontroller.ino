@@ -3,17 +3,13 @@
   MultiTrellis object controlling an array of
   NeoTrellis boards
 
-  As is this example shows use of two NeoTrellis boards
-  connected together with the leftmost board having the
-  default I2C address of 0x2E, and the rightmost board
-  having the address of 0x2F (the A0 jumper is soldered)
+  As is, this example shows use of 4 NeoTrellis boards
+  connected together.
 
   Any noteOn on ch16 will advance column highlight.
   Any noteOn on ch15 will advance row highlight.
   Any noteOn on ch14 will reset row / column highlight to pos 0.
   Any noteOn on other channels will illuminate associated key.
-  On a Feather M4 Express, 420bpm seems to be rough limit on
-  incoming msgs before things start to get buffered.
 */
 #include <memory>
 #include <map>
@@ -36,7 +32,7 @@ byte note_sequence[] = {
   75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87
 };
 
-// Array of midi-cc IDs to be mapped top left to bottom right
+// Array of midi-cc IDs to be mapped top left to bottom right (unused at the mo)
 byte control_sequence[] = {
   24, 25, 26, 27, 28, 29, 30, 31,
   32, 33, 34, 35, 36, 37, 38, 39,
@@ -48,9 +44,21 @@ byte control_sequence[] = {
   80, 81, 82, 83, 84, 85, 86, 87
 };
 
+// Array to store individual led states
+int state[] = {
+  0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0
+};
+
 #define Y_DIM 8 //number of rows of key
 #define X_DIM 8 //number of columns of keys
-#define maincolor seesaw_NeoPixel::Color(0,0,0)
+#define maincolor seesaw_NeoPixel::Color(0,0,0) //our 'inactive' background color
 
 //create a matrix of trellis panels
 Adafruit_NeoTrellis t_array[Y_DIM / 4][X_DIM / 4] = {
@@ -112,7 +120,7 @@ TrellisCallback onKey(keyEvent evt) {
 
 void setup() {
 
-  Serial.begin(9600);
+  Serial.begin(31250);
 
   if (!trellis.begin()) {
     Serial.println("failed to begin trellis");
@@ -138,6 +146,9 @@ void setup() {
       trellis.show(); //show all LEDs
       delay(20);
     }
+  }
+  for (int i = 0; i < Y_DIM * X_DIM; i++) {
+    state[i] = maincolor;
   }
   Serial.println(" Ready!");
 }
@@ -169,13 +180,16 @@ void loop() {
           break;
         default:
           if (type1 == 0x08 && type2 == 0x80) {
-            trellis.setPixelColor(key, 0x0);
+            trellis.setPixelColor(key, maincolor);
+            state[key]=0x0;
           }
           if (type1 == 0x09 && type2 == 0x90) {
             if (rx.byte3) {
-              trellis.setPixelColor(key, Wheel(key * 8));
+              trellis.setPixelColor(key, Wheel(key*3.9));
+              state[key]=Wheel(key);
             } else {
-              trellis.setPixelColor(key, 0x0);
+              trellis.setPixelColor(key, maincolor);
+              state[key]=maincolor;
             }
           }
           break;
@@ -184,94 +198,46 @@ void loop() {
   } while (rx.header != 0);
 }
 
-//void handleNoteOn(byte channel, byte pitch, byte velocity)
-//{
-//  switch (channel)
-//  {
-//    case 16:
-//      lightCol(col);
-//      col = col < (X_DIM-1) ? col+1 : 0;
-//      break;
-//    case 15:
-//      lightRow(row);
-//      row = row < (Y_DIM-1) ? row+1 : 0;
-//      break;
-//    case 14:
-//      reset();
-//      break;
-//    default:
-//      for(int i=0; i<Y_DIM*X_DIM; i++){
-//        if (pitch == note_sequence[i]) {
-//         trellis.setPixelColor(i,Wheel(map(i, 0, X_DIM*Y_DIM, 0, 100)));
-////         if (i+1<Y_DIM*X_DIM)
-////          if(((i+1) % X_DIM) > 0){
-////            trellis.setPixelColor(i+1,Wheel(map(i, 0, X_DIM*Y_DIM, 0, 100)));
-////          }
-////         if (i-1>1)
-////          if(((i-1) % X_DIM) > 0){
-////            trellis.setPixelColor(i-1,Wheel(map(i, 0, X_DIM*Y_DIM, 0, 100)));
-////          }
-////         if (i+Y_DIM<Y_DIM*X_DIM)
-////          trellis.setPixelColor(i+Y_DIM,Wheel(map(i, 0, X_DIM*Y_DIM, 0, 100)));
-////         if (i-Y_DIM>0)
-////          trellis.setPixelColor(i-Y_DIM,Wheel(map(i, 0, X_DIM*Y_DIM, 0, 100)));
-//         trellis.show();
-//         break;
-//        }
-//      }
-//      break;
-//  }
-//}
-//
-//void handleNoteOff(byte channel, byte pitch, byte velocity)
-//{
-//  for(int i=0; i<Y_DIM*X_DIM; i++){
-//    if (pitch == note_sequence[i]) {
-//     trellis.setPixelColor(i,maincolor);
-////     if (i+1<Y_DIM*X_DIM)
-////      trellis.setPixelColor(i+1,maincolor);
-////     if (i-1>1)
-////      trellis.setPixelColor(i-1,maincolor);
-////     if (i+X_DIM<Y_DIM*X_DIM)
-////      trellis.setPixelColor(i+X_DIM,maincolor);
-////     if (i-X_DIM>0)
-////      trellis.setPixelColor(i-X_DIM,maincolor);//addressed with keynum
-//     trellis.show();
-//     break;
-//    }
-//  }
-//}
-
 void lightRow(int row) {
   if (lastrow != row) {
     dimRow(lastrow);
   }
   for (int i = (row * X_DIM); i < ((row * X_DIM) + X_DIM); i++) {
-    trellis.setPixelColor(i, seesaw_NeoPixel::Color(10, 0, 0));
+    if (state[i]!=0x0 && state[i]!=0){
+      trellis.setPixelColor(i, state[i]);
+    } else {
+      trellis.setPixelColor(i, seesaw_NeoPixel::Color(10, 0,0));
+    }
   }
   lastrow = row;
 }
 void dimRow(int row) {
   for (int i = (row * X_DIM); i < ((row * X_DIM) + X_DIM); i++) {
-    trellis.setPixelColor(i, maincolor);
+    trellis.setPixelColor(i, state[i]);
   }
 }
 void lightCol(int col) {
   dimCol(lastcol);
   for (int i = col; i < Y_DIM * X_DIM; i++) {
-    if ((i % 4) == 0) { // assuming 4/4 timing
-      trellis.setPixelColor(i, seesaw_NeoPixel::Color(35, 35, 35));
+    if (state[i]!=0x0 && state[i]!=0){
+      if ((i % 4) == 0) { // assuming 4/4 timing
+        trellis.setPixelColor(i, state[i]);
+      } else {
+        trellis.setPixelColor(i, state[i]);
+      }
     } else {
-      trellis.setPixelColor(i, seesaw_NeoPixel::Color(10, 10, 10));
+      trellis.setPixelColor(i, seesaw_NeoPixel::Color(30,30,30));
     }
+    
+    
     i = i + (Y_DIM - 1);
   }
   lastcol = col;
-  trellis.show();
+  //trellis.show();
 }
 void dimCol(int col) {
   for (int i = col; i < X_DIM * Y_DIM; i++) {
-    trellis.setPixelColor(i, maincolor);
+    trellis.setPixelColor(i, state[i]);
     i = i + (Y_DIM - 1);
   }
   //trellis.show();
